@@ -1,0 +1,31 @@
+-- Recent audit entries with user info
+SELECT 
+    audit_id,
+    TO_CHAR(operation_date, 'DD-MON-YYYY HH24:MI:SS') AS timestamp,
+    table_name,
+    operation,
+    user_name,
+    os_user,
+    machine_name,
+    ip_address,
+    status,
+    CASE 
+        WHEN LENGTH(error_message) > 50 
+        THEN SUBSTR(error_message, 1, 50) || '...' 
+        ELSE error_message 
+    END AS error_preview
+FROM audit_log
+WHERE operation_date >= SYSDATE - 1
+ORDER BY operation_date DESC;
+
+-- Today's audit summary
+SELECT 
+    TO_CHAR(operation_date, 'DD-MON-YYYY') AS audit_date,
+    table_name,
+    operation,
+    status,
+    COUNT(*) AS operation_count
+FROM audit_log
+WHERE TRUNC(operation_date) = TRUNC(SYSDATE)
+GROUP BY TO_CHAR(operation_date, 'DD-MON-YYYY'), table_name, operation, status
+ORDER BY audit_date, operation_count DESC;
